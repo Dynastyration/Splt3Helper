@@ -1,7 +1,8 @@
 import Http
 import base64
+
 def GetNSOConfig() -> str:
-    '''
+    '''s
     x.x.x
     '''
     response = Http.httpSession.get('https://nxapi-znca-api.fancy.org.uk/api/znca/config',
@@ -22,7 +23,8 @@ def GetNxapiToken()->dict:
         timeout=(20, 120)
     )
     return nxapiToken.json()
-def GetNxapiF(NxapiaccessToken:str,NSidToken:str,usernaId:str,userlanguage:str,NSOVersion:str)->dict:
+
+def GetNxapiF1(NxapiaccessToken:str,NSidToken:str,usernaId:str,userlanguage:str,NSOVersion:str)->dict:
     '''
     f,timestamp,request_id
     '''
@@ -50,17 +52,7 @@ def GetNxapiF(NxapiaccessToken:str,NSidToken:str,usernaId:str,userlanguage:str,N
         headers=header,
         json=data,
         timeout=(20, 120))
-    # print(nxapiF.headers.get('Server-Timing'))
-    # print(nxapiF.headers.get('X-Trace-Id'))
-    # print(nxapiF.status_code)
-    # print(nxapiF.text)
-    # print(nxapiToken,'\n',nxapiF)
     return nxapiF.json()
-
-
-
-
-
 
 def DecryptNXAPI(nxapiAccessToken:str,NSOCrypt:str,NSOVersion)->dict:
     '''
@@ -93,9 +85,9 @@ def GetNSOCoralToken(encryptedBody,nxapiAccessToken:str,NSOVersion:str)->dict:
         'User-Agent':       f'com.nintendo.znca/{NSOVersion}(Android/14)',}
     NSOCoralToken=Http.httpSession.post('https://api-lp1.znc.srv.nintendo.net/v4/Account/Login',\
                                    headers=header,data=encryptedBody,timeout=(30,30))
-    # print(f'Coral status: {NSOCoralToken.status_code}, {len(NSOCoralToken.content)} 字节')
-    # print(NSOCoralToken.text)
+
     return DecryptNXAPI(nxapiAccessToken,NSOCoralToken,NSOVersion)
+
 def GetNxapiF2(nxapiAccessToken:str,coralAccessToken:str,naId:str,coralUserId:str,NSOVersion:str):
     header={
                 'Authorization':'Bearer '+nxapiAccessToken,
@@ -112,7 +104,7 @@ def GetNxapiF2(nxapiAccessToken:str,coralAccessToken:str,naId:str,coralUserId:st
             'encrypt_token_request': {
                 'url': 'https://api-lp1.znc.srv.nintendo.net/v4/Game/GetWebServiceToken',
                 'parameter': {
-                    'id': 4834290508791808,
+                    'id': 4834290508791808,#喷3
                     'registrationToken': '',
                     'timestamp': 0,
                     'requestId': '',
@@ -120,3 +112,33 @@ def GetNxapiF2(nxapiAccessToken:str,coralAccessToken:str,naId:str,coralUserId:st
     fResp=Http.httpSession.post('https://nxapi-znca-api.fancy.org.uk/api/znca/f',
                                         headers=header,json=body,timeout=(30,120))
     return fResp.json()
+
+def GetWebServiceToken(encryptedBody:bytes,nxapiAccessToken:str,NSOVersion:str)->dict:
+    header={
+        'X-Platform':       'Android',
+        'X-ProductVersion': NSOVersion,
+        'Content-Type':     'application/octet-stream',
+        'Accept':           'application/octet-stream,application/json',
+        'Connection':       'Keep-Alive',
+        'Accept-Encoding':  'gzip',
+        'User-Agent':       f'com.nintendo.znca/{NSOVersion}(Android/14)',}
+    resp=Http.httpSession.post('https://api-lp1.znc.srv.nintendo.net/v4/Game/GetWebServiceToken',
+                               headers=header,data=encryptedBody,timeout=(30,30))
+    return DecryptNXAPI(nxapiAccessToken,resp,NSOVersion)
+
+def GetBulletToken(gtoken:str,NSOVersion:str,language:str,country:str)->str:
+    header={
+        'Content-Type':     'application/json',
+        'Accept-Language':  language,
+        'User-Agent':       f'com.nintendo.znca/{NSOVersion}(Android/14)',
+        'X-Web-View-Ver':   '10.0.0-88706e32',
+        'X-NACOUNTRY':      country,
+        'Accept':           '*/*',
+        'Origin':           'https://api.lp1.av5ja.srv.nintendo.net',
+        'X-Requested-With': 'com.nintendo.znca'}
+    resp=Http.httpSession.post('https://api.lp1.av5ja.srv.nintendo.net/api/bullet_tokens',
+                               headers=header,
+                               cookies={'_gtoken':gtoken,'_dnt':'1'},
+                               timeout=(30,30))
+    return resp.json()['bulletToken']
+

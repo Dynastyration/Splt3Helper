@@ -25,11 +25,24 @@ def main():
     print('-')
     nxapiToken=Nxapi.GetNxapiToken()
     print('nxapiToken:',nxapiToken)
-    nxapiF=Nxapi.GetNxapiF(nxapiToken['access_token'],NSToken['id_token'],user['id'],user['language'],NSOVersion)
+    nxapiF=Nxapi.GetNxapiF1(nxapiToken['access_token'],NSToken['id_token'],user['id'],user['language'],NSOVersion)
     print('nxapiF:',nxapiF)
     encryptedBody=base64.b64decode(nxapiF['encrypted_token_request'])
     print(encryptedBody)
+    nsocoral=Nxapi.GetNSOCoralToken(encryptedBody,nxapiToken['access_token'],NSOVersion)
+    print(nsocoral)
+    coralToken=nsocoral['result']['webApiServerCredential']['accessToken']
+    coralUserId=nsocoral['result']['user']['id']
 
+    nxapif2=Nxapi.GetNxapiF2(nxapiToken['access_token'],coralToken,user['id'],coralUserId,NSOVersion)
+    print('nxapif2:',nxapif2)
+    webService=Nxapi.GetWebServiceToken(base64.b64decode(nxapif2['encrypted_token_request']),
+                                        nxapiToken['access_token'],NSOVersion)
+    gtoken=webService['result']['accessToken']
+    print('gtoken:',gtoken)
+
+    bulletToken=Nxapi.GetBulletToken(gtoken,NSOVersion,user['language'],user['country'])
+    print('bulletToken:',bulletToken)
 
 
 

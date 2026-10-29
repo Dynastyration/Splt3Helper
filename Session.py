@@ -4,7 +4,6 @@ import base64
 import hashlib
 from urllib.parse import urlsplit,parse_qs
 import webbrowser
-
 import Http
 
 @dataclass(frozen=True)
@@ -48,6 +47,7 @@ def GetSessionToken(sessionTokenCode:str,loginAttempt:LoginAttempt)->dict :
     sessionToken=Http.httpSession.post('https://accounts.nintendo.com/connect/1.0.0/api/session_token',
                                   data=dataSession,headers={'User-Agent':'Mozilla/5.0'})
     return sessionToken.json()
+
 def GetAccountToken(sessionToken:str)->dict:
     '''
     token_type,expires_in,access_token,id_token,scope

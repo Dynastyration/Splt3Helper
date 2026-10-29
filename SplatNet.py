@@ -1,3 +1,6 @@
+import base64
+import datetime
+import re
 import Http
 
 SPLATNET3_URL='https://api.lp1.av5ja.srv.nintendo.net'
@@ -34,3 +37,43 @@ def QueryGraphQL(gtoken:str,bulletToken:str,NSOVersion:str,language:str,country:
                                cookies={'_gtoken':gtoken,'_dnt':'1'},
                                timeout=(30,120))
     return resp.json()
+
+def ParseBattleTime(battleId:str):
+    try:
+        text=base64.b64decode(battleId).decode()
+    except Exception:
+        return None
+    match=re.search(r'(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})',text)
+    if match is None:
+        return None
+    stamp=datetime.datetime(*(int(value) for value in match.groups()),tzinfo=datetime.timezone.utc)
+    return stamp.astimezone()
+
+def CollectBattles(battle:dict)->list:
+    details=[]
+    for group in battle['data']['latestBattleHistories']['historyGroups']['nodes']:
+        for detail in group['historyDetails']['nodes']:
+            details.append({
+                'id':        detail['id'],
+                'time':      ParseBattleTime(detail['id']),
+                'mode':      detail['vsMode']['mode'],
+                'rule':      detail['vsRule']['name'],
+                'stage':     detail['vsStage']['name'],
+                'result':    detail['judgement'],
+                'knockout':  detail['knockout'],
+                'score':     detail['myTeam']['result']['score'],
+                'udemae':    detail.get('udemae'),
+                'point':     (detail.get('bankaraMatch') or {}).get('earnedUdemaePoint'),
+                'weapon':    detail['player']['weapon']['name'],
+            })
+    return details
+
+def Summarize(details:list)->None:
+    for key in ('rule','stage'):
+        buckets={}
+        for item in details:
+            bucket=buckets.setdefault(item[key],[0,0])
+            bucket[0]+=1
+            bucket[1]+=item['result']=='WIN'
+        for name,(total,wins) in sorted(buckets.items(),key=lambda kv:-kv[1][0]):
+            print(f'{name}\t{total:>3} 场\t{wins:>3} 胜\t{wins/total:.0%}')

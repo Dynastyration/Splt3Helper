@@ -48,6 +48,8 @@ def main():
     battle=SplatNet.QueryGraphQL(gtoken,bulletToken,NSOVersion,user['language'],user['country'],
                                 'LatestBattleHistoriesQuery')
     print(battle)
+    details=SplatNet.CollectBattles(battle)
+    SplatNet.Summarize(details)
 
 
 

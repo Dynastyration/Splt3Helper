@@ -1,6 +1,7 @@
 import Session
 import Nxapi
 import base64
+import SplatNet
 def main():
     loginAttempt=Session.LoginAttempt()
     print('loginAttempt:',loginAttempt)
@@ -37,12 +38,16 @@ def main():
     nxapif2=Nxapi.GetNxapiF2(nxapiToken['access_token'],coralToken,user['id'],coralUserId,NSOVersion)
     print('nxapif2:',nxapif2)
     webService=Nxapi.GetWebServiceToken(base64.b64decode(nxapif2['encrypted_token_request']),
-                                        nxapiToken['access_token'],NSOVersion)
+                                        nxapiToken['access_token'],coralToken,NSOVersion)
+    print('webService:',webService)
     gtoken=webService['result']['accessToken']
     print('gtoken:',gtoken)
 
     bulletToken=Nxapi.GetBulletToken(gtoken,NSOVersion,user['language'],user['country'])
     print('bulletToken:',bulletToken)
+    battle=SplatNet.QueryGraphQL(gtoken,bulletToken,NSOVersion,user['language'],user['country'],
+                                'LatestBattleHistoriesQuery')
+    print(battle)
 
 
 

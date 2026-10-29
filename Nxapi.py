@@ -95,7 +95,7 @@ def GetNxapiF2(nxapiAccessToken:str,coralAccessToken:str,naId:str,coralUserId:st
                 'X-znca-Platform': 'Android',
                 'X-znca-Version': NSOVersion,
                 'X-znca-Client-Version': 'd8fAZDPzwimzQ7c6'
-            },
+            }
     body={
             "hash_method": "2",
             "token": coralAccessToken,
@@ -113,10 +113,11 @@ def GetNxapiF2(nxapiAccessToken:str,coralAccessToken:str,naId:str,coralUserId:st
                                         headers=header,json=body,timeout=(30,120))
     return fResp.json()
 
-def GetWebServiceToken(encryptedBody:bytes,nxapiAccessToken:str,NSOVersion:str)->dict:
+def GetWebServiceToken(encryptedBody:bytes,nxapiAccessToken:str,coralAccessToken:str,NSOVersion:str)->dict:
     header={
         'X-Platform':       'Android',
         'X-ProductVersion': NSOVersion,
+        'Authorization':    'Bearer '+coralAccessToken,
         'Content-Type':     'application/octet-stream',
         'Accept':           'application/octet-stream,application/json',
         'Connection':       'Keep-Alive',
